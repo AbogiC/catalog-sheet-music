@@ -151,7 +151,7 @@
             <p v-if="item.tempo"><strong>Tempo/Style:</strong> {{ item.tempo }}</p>
             <p>
               <strong>Difficulty:</strong>
-              <span class="difficulty-badge" :class="item.difficulty?.toLowerCase()">{{
+              <span class="difficulty-badge" :class="(item.difficulty || '').toLowerCase()">{{
                 item.difficulty
               }}</span>
             </p>
@@ -171,133 +171,136 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, reactive } from 'vue'
-
-const sheetMusic = ref([])
-const loading = ref(false)
-const searchQuery = ref('')
-const filterDifficulty = ref('')
-const editingId = ref(null)
-
-const form = reactive({
-  title: '',
-  composer: '',
-  composer_dates: '',
-  opus: '',
-  arranger: '',
-  instrumentation: '',
-  key: '',
-  tempo: '',
-  difficulty: '',
-  duration: '',
-  publisher: '',
-  year_published: '',
-  location: '',
-  notes: '',
-})
-
-// Fetch all sheet music
-async function fetchSheetMusic() {
-  loading.value = true
-  try {
-    const response = await fetch('http://localhost:3000/api/sheet-music')
-    sheetMusic.value = await response.json()
-  } catch (error) {
-    console.error('Error fetching sheet music:', error)
-  } finally {
-    loading.value = false
-  }
-}
-
-// Search and filter
-async function searchSheetMusic() {
-  loading.value = true
-  try {
-    const params = new URLSearchParams()
-    if (searchQuery.value) params.append('q', searchQuery.value)
-    if (filterDifficulty.value) params.append('difficulty', filterDifficulty.value)
-
-    const response = await fetch(`http://localhost:3000/api/sheet-music?${params}`)
-    sheetMusic.value = await response.json()
-  } catch (error) {
-    console.error('Error searching:', error)
-  } finally {
-    loading.value = false
-  }
-}
-
-async function filterSheetMusic() {
-  await searchSheetMusic()
-}
-
-// Save or update sheet music
-async function saveSheetMusic() {
-  try {
-    const url = editingId.value
-      ? `http://localhost:3000/api/sheet-music/${editingId.value}`
-      : 'http://localhost:3000/api/sheet-music'
-
-    const method = editingId.value ? 'PUT' : 'POST'
-
-    const response = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
-
-    if (response.ok) {
-      resetForm()
-      await fetchSheetMusic()
+<script>
+export default {
+  data() {
+    return {
+      sheetMusic: [],
+      loading: false,
+      searchQuery: '',
+      filterDifficulty: '',
+      editingId: null,
+      form: {
+        title: '',
+        composer: '',
+        composer_dates: '',
+        opus: '',
+        arranger: '',
+        instrumentation: '',
+        key: '',
+        tempo: '',
+        difficulty: '',
+        duration: '',
+        publisher: '',
+        year_published: '',
+        location: '',
+        notes: '',
+      },
     }
-  } catch (error) {
-    console.error('Error saving sheet music:', error)
-  }
+  },
+  mounted() {
+    this.fetchSheetMusic()
+  },
+  methods: {
+    // Fetch all sheet music
+    async fetchSheetMusic() {
+      this.loading = true
+      try {
+        const response = await fetch('http://localhost:3000/api/sheet-music')
+        this.sheetMusic = await response.json()
+      } catch (error) {
+        console.error('Error fetching sheet music:', error)
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // Search and filter
+    async searchSheetMusic() {
+      this.loading = true
+      try {
+        const params = new URLSearchParams()
+        if (this.searchQuery) params.append('q', this.searchQuery)
+        if (this.filterDifficulty) params.append('difficulty', this.filterDifficulty)
+
+        const response = await fetch(`http://localhost:3000/api/sheet-music?${params}`)
+        this.sheetMusic = await response.json()
+      } catch (error) {
+        console.error('Error searching:', error)
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async filterSheetMusic() {
+      await this.searchSheetMusic()
+    },
+
+    // Save or update sheet music
+    async saveSheetMusic() {
+      try {
+        const url = this.editingId
+          ? `http://localhost:3000/api/sheet-music/${this.editingId}`
+          : 'http://localhost:3000/api/sheet-music'
+
+        const method = this.editingId ? 'PUT' : 'POST'
+
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.form),
+        })
+
+        if (response.ok) {
+          this.resetForm()
+          await this.fetchSheetMusic()
+        }
+      } catch (error) {
+        console.error('Error saving sheet music:', error)
+      }
+    },
+
+    // Edit sheet music
+    editSheetMusic(item) {
+      this.editingId = item.id
+      Object.keys(this.form).forEach((key) => {
+        this.form[key] = item[key] || ''
+      })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    },
+
+    // Delete sheet music
+    async deleteSheetMusic(id) {
+      if (!confirm('Are you sure you want to delete this item?')) return
+
+      try {
+        const response = await fetch(`http://localhost:3000/api/sheet-music/${id}`, {
+          method: 'DELETE',
+        })
+
+        if (response.ok) {
+          await this.fetchSheetMusic()
+        }
+      } catch (error) {
+        console.error('Error deleting sheet music:', error)
+      }
+    },
+
+    // Cancel edit
+    cancelEdit() {
+      this.editingId = null
+      this.resetForm()
+    },
+
+    // Reset form
+    resetForm() {
+      this.editingId = null
+      Object.keys(this.form).forEach((key) => {
+        this.form[key] = ''
+      })
+    },
+  },
 }
-
-// Edit sheet music
-function editSheetMusic(item) {
-  editingId.value = item.id
-  Object.keys(form).forEach((key) => {
-    form[key] = item[key] || ''
-  })
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-// Delete sheet music
-async function deleteSheetMusic(id) {
-  if (!confirm('Are you sure you want to delete this item?')) return
-
-  try {
-    const response = await fetch(`http://localhost:3000/api/sheet-music/${id}`, {
-      method: 'DELETE',
-    })
-
-    if (response.ok) {
-      await fetchSheetMusic()
-    }
-  } catch (error) {
-    console.error('Error deleting sheet music:', error)
-  }
-}
-
-// Cancel edit
-function cancelEdit() {
-  editingId.value = null
-  resetForm()
-}
-
-// Reset form
-function resetForm() {
-  editingId.value = null
-  Object.keys(form).forEach((key) => {
-    form[key] = ''
-  })
-}
-
-onMounted(() => {
-  fetchSheetMusic()
-})
 </script>
 
 <style scoped>

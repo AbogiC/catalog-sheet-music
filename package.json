@@ -2,31 +2,24 @@
   "name": "sheet-music-catalog",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
   "engines": {
-    "node": "^20.19.0 || >=22.12.0"
+    "node": ">=12.22.9"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --fix --cache",
-    "format": "prettier --write --experimental-cli src/"
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "pinia": "^3.0.4",
-    "vue": "^3.5.26",
-    "vue-router": "^4.6.4"
+    "vue": "^2.7.16",
+    "vue-router": "^3.6.5",
+    "vuex": "^3.6.2"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "@vitejs/plugin-vue": "^6.0.3",
-    "@vue/eslint-config-prettier": "^10.2.0",
-    "eslint": "^9.39.2",
-    "eslint-plugin-vue": "~10.6.2",
-    "globals": "^17.0.0",
-    "prettier": "3.7.4",
-    "vite": "^7.3.0",
-    "vite-plugin-vue-devtools": "^8.0.5"
+    "@vue/cli-service": "~4.5.15",
+    "@vue/cli-plugin-eslint": "~4.5.15",
+    "babel-eslint": "^10.1.0",
+    "eslint-plugin-vue": "^6.2.1",
+    "prettier": "3.7.4"
   }
 }
