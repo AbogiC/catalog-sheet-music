@@ -204,7 +204,10 @@ export default {
     async fetchSheetMusic() {
       this.loading = true
       try {
-        const response = await fetch('http://localhost:3000/api/sheet-music')
+        console.log('URL DOMAIN: ' + process.env.VUE_APP_URL_DOMAIN)
+        const response = await fetch(
+          `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music`,
+        )
         this.sheetMusic = await response.json()
       } catch (error) {
         console.error('Error fetching sheet music:', error)
@@ -221,7 +224,9 @@ export default {
         if (this.searchQuery) params.append('q', this.searchQuery)
         if (this.filterDifficulty) params.append('difficulty', this.filterDifficulty)
 
-        const response = await fetch(`http://localhost:3000/api/sheet-music?${params}`)
+        const response = await fetch(
+          `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music?${params}`,
+        )
         this.sheetMusic = await response.json()
       } catch (error) {
         console.error('Error searching:', error)
@@ -238,8 +243,8 @@ export default {
     async saveSheetMusic() {
       try {
         const url = this.editingId
-          ? `http://localhost:3000/api/sheet-music/${this.editingId}`
-          : 'http://localhost:3000/api/sheet-music'
+          ? `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music/${this.editingId}`
+          : `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music`
 
         const method = this.editingId ? 'PUT' : 'POST'
 
@@ -286,9 +291,12 @@ export default {
       if (!confirm('Are you sure you want to delete this item?')) return
 
       try {
-        const response = await fetch(`http://localhost:3000/api/sheet-music/${id}`, {
-          method: 'DELETE',
-        })
+        const response = await fetch(
+          `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music/${id}`,
+          {
+            method: 'DELETE',
+          },
+        )
 
         if (response.ok) {
           await this.fetchSheetMusic()
