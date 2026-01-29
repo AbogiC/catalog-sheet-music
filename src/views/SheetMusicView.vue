@@ -4,12 +4,8 @@
 
     <!-- Search and Filter -->
     <div class="search-section">
-      <input
-        v-model="searchQuery"
-        @input="searchSheetMusic"
-        placeholder="Search by title, composer, or instrumentation..."
-        class="search-input"
-      />
+      <input v-model="searchQuery" @input="searchSheetMusic"
+        placeholder="Search by title, composer, or instrumentation..." class="search-input" />
       <div class="filter-section">
         <select v-model="filterDifficulty" @change="filterSheetMusic">
           <option value="">All Difficulties</option>
@@ -22,7 +18,7 @@
     </div>
 
     <!-- Add Button -->
-    <div class="add-button-section">
+    <div v-if="isAdmin" class="add-button-section">
       <button @click="openAddModal" class="btn-primary">Add New Sheet Music</button>
     </div>
 
@@ -51,8 +47,8 @@
               }}</span>
             </td>
             <td class="actions-cell">
-              <button @click="editSheetMusic(item)" class="btn-edit">Edit</button>
-              <button @click="deleteSheetMusic(item.id)" class="btn-delete">Delete</button>
+              <button @click="editSheetMusic(item)" class="btn-edit">{{ isAdmin ? 'Edit' : 'View' }}</button>
+              <button v-if="isAdmin" @click="deleteSheetMusic(item.id)" class="btn-delete">Delete</button>
             </td>
           </tr>
         </tbody>
@@ -63,7 +59,8 @@
     <div v-if="showModal" class="modal-backdrop" @click="closeModal">
       <div class="modal" @click.stop>
         <div class="modal-header">
-          <h2>{{ isEditing ? 'Edit' : 'Add' }} Sheet Music</h2>
+          <h2 v-if="isAdmin">{{ isEditing ? 'Edit' : 'Add' }} Sheet Music</h2>
+          <h2 v-if="!isAdmin">Preview Sheet Music</h2>
           <button @click="closeModal" class="close-btn">&times;</button>
         </div>
         <div class="modal-body">
@@ -71,51 +68,51 @@
             <div class="form-row">
               <div class="form-group">
                 <label>Title *</label>
-                <input v-model="form.title" required />
+                <input v-model="form.title" :disabled="!isAdmin" required />
               </div>
               <div class="form-group">
                 <label>Composer</label>
-                <input v-model="form.composer" />
+                <input v-model="form.composer" :disabled="!isAdmin" />
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label>Composer Dates</label>
-                <input v-model="form.composer_dates" placeholder="e.g., 1685-1750" />
+                <input v-model="form.composer_dates" :disabled="!isAdmin" placeholder="e.g., 1685-1750" />
               </div>
               <div class="form-group">
                 <label>Opus/Catalog Number</label>
-                <input v-model="form.opus" />
+                <input v-model="form.opus" :disabled="!isAdmin" />
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label>Arranger/Editor</label>
-                <input v-model="form.arranger" />
+                <input v-model="form.arranger" :disabled="!isAdmin" />
               </div>
               <div class="form-group">
                 <label>Instrumentation</label>
-                <input v-model="form.instrumentation" placeholder="e.g., Piano, Violin" />
+                <input v-model="form.instrumentation" :disabled="!isAdmin" placeholder="e.g., Piano, Violin" />
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label>Key</label>
-                <input v-model="form.key" placeholder="e.g., C major, A minor" />
+                <input v-model="form.key" :disabled="!isAdmin" placeholder="e.g., C major, A minor" />
               </div>
               <div class="form-group">
                 <label>Tempo/Style</label>
-                <input v-model="form.tempo" placeholder="e.g., Allegro, Adagio" />
+                <input v-model="form.tempo" :disabled="!isAdmin" placeholder="e.g., Allegro, Adagio" />
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label>Difficulty</label>
-                <select v-model="form.difficulty">
+                <select v-model="form.difficulty" :disabled="!isAdmin">
                   <option value="">Select Difficulty</option>
                   <option value="Beginner">Beginner</option>
                   <option value="Intermediate">Intermediate</option>
@@ -125,40 +122,41 @@
               </div>
               <div class="form-group">
                 <label>Duration (minutes)</label>
-                <input v-model="form.duration" type="number" step="0.1" />
+                <input v-model="form.duration" :disabled="!isAdmin" type="number" step="0.1" />
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label>Publisher</label>
-                <input v-model="form.publisher" />
+                <input v-model="form.publisher" :disabled="!isAdmin" />
               </div>
               <div class="form-group">
                 <label>Year Published</label>
-                <input v-model="form.year_published" type="number" />
+                <input v-model="form.year_published" :disabled="!isAdmin" type="number" />
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group full-width">
                 <label>Location/File Name</label>
-                <input v-model="form.location" placeholder="e.g., /music/bach_prelude.pdf" />
+                <input v-model="form.location" :disabled="!isAdmin" placeholder="e.g., /music/bach_prelude.pdf" />
               </div>
             </div>
 
             <div class="form-row">
               <div class="form-group full-width">
                 <label>Notes</label>
-                <textarea v-model="form.notes" rows="3"></textarea>
+                <textarea v-model="form.notes" :disabled="!isAdmin" rows="3"></textarea>
               </div>
             </div>
 
             <div class="form-actions">
-              <button type="submit" class="btn-primary">
+              <button v-if="isAdmin" type="submit" :disabled="!isAdmin" class="btn-primary">
                 {{ isEditing ? 'Update' : 'Save' }}
               </button>
-              <button type="button" @click="closeModal" class="btn-secondary">Cancel</button>
+              <button type="button" @click="closeModal" class="btn-secondary">{{ isAdmin ? 'Cancel' : 'Close'
+                }}</button>
             </div>
           </form>
         </div>
@@ -178,6 +176,7 @@ export default {
       showModal: false,
       isEditing: false,
       editingId: null,
+      isAdmin: false,
       form: {
         title: '',
         composer: '',
@@ -198,15 +197,30 @@ export default {
   },
   mounted() {
     this.fetchSheetMusic()
+    this.checkAdminStatus()
   },
   methods: {
+    async checkAdminStatus() {
+      const user = localStorage.getItem('user')
+      if (user) {
+        const userData = JSON.parse(user)
+        this.isAdmin = userData.role === 'admin'
+      }
+    },
+
+    getAuthHeader() {
+      const token = localStorage.getItem('auth_token')
+      return token ? { 'Authorization': `Bearer ${token}` } : {}
+    },
+
     // Fetch all sheet music
     async fetchSheetMusic() {
       this.loading = true
       try {
-        console.log('URL DOMAIN: ' + process.env.VUE_APP_URL_DOMAIN)
         const response = await fetch(
-          `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music`,
+          `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music`, {
+          headers: this.getAuthHeader()
+        }
         )
         this.sheetMusic = await response.json()
       } catch (error) {

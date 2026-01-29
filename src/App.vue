@@ -3,6 +3,7 @@
     <nav class="navbar">
       <div class="nav-container">
         <router-link to="/" class="nav-brand"> 🎼 Sheet Music Catalog </router-link>
+        <button @click="logout">Logout</button>
       </div>
     </nav>
     <main class="main-content">
@@ -12,7 +13,24 @@
 </template>
 
 <script>
-export default {}
+export default {
+  name: 'App',
+  methods: {
+    logout() {
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('user')
+
+      // Optional: Send logout request to backend to invalidate token
+      // await fetch('http://localhost:3000/api/logout', {
+      //   method: 'POST',
+      //   headers: getAuthHeader()
+      // })
+
+      // Redirect to login page
+      window.location.href = '/login'
+    }
+  }
+}
 </script>
 
 <style>
