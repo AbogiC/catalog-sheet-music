@@ -59,7 +59,6 @@ CREATE TABLE IF NOT EXISTS sheet_music (
   year_published INT,
   location VARCHAR(500),
   notes TEXT,
-  user_id INT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
@@ -388,12 +387,6 @@ app.get('/api/sheet-music', authenticateToken, (req, res) => {
   if (req.query.difficulty) {
     conditions.push('difficulty = ?')
     params.push(req.query.difficulty)
-  }
-
-  // Regular users can only see their own sheet music
-  if (req.user.role !== 'admin') {
-    conditions.push('user_id = ?')
-    params.push(req.user.id)
   }
 
   if (conditions.length > 0) {
