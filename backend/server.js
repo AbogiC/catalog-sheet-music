@@ -373,7 +373,7 @@ app.put('/api/users/:id/role', authenticateToken, checkAdmin, (req, res) => {
 // Update sheet music routes to include authentication
 
 // Get all sheet music with search (now includes user_id)
-app.get('/api/sheet-music', authenticateToken, (req, res) => {
+app.get('/api/sheet-music', (req, res) => {
   let sql = 'SELECT * FROM sheet_music'
   const params = []
   const conditions = []

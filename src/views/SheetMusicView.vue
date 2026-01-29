@@ -44,7 +44,7 @@
             <td>
               <span class="difficulty-badge" :class="(item.difficulty || '').toLowerCase()">{{
                 item.difficulty
-              }}</span>
+                }}</span>
             </td>
             <td class="actions-cell">
               <button @click="editSheetMusic(item)" class="btn-edit">{{ isAdmin ? 'Edit' : 'View' }}</button>
@@ -156,7 +156,7 @@
                 {{ isEditing ? 'Update' : 'Save' }}
               </button>
               <button type="button" @click="closeModal" class="btn-secondary">{{ isAdmin ? 'Cancel' : 'Close'
-                }}</button>
+              }}</button>
             </div>
           </form>
         </div>
@@ -166,6 +166,7 @@
 </template>
 
 <script>
+import { isAdmin } from '../auth/auth.js'
 export default {
   data() {
     return {
@@ -197,30 +198,15 @@ export default {
   },
   mounted() {
     this.fetchSheetMusic()
-    this.checkAdminStatus()
+    this.isAdmin = isAdmin()
   },
   methods: {
-    async checkAdminStatus() {
-      const user = localStorage.getItem('user')
-      if (user) {
-        const userData = JSON.parse(user)
-        this.isAdmin = userData.role === 'admin'
-      }
-    },
-
-    getAuthHeader() {
-      const token = localStorage.getItem('auth_token')
-      return token ? { 'Authorization': `Bearer ${token}` } : {}
-    },
-
     // Fetch all sheet music
     async fetchSheetMusic() {
       this.loading = true
       try {
         const response = await fetch(
-          `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music`, {
-          headers: this.getAuthHeader()
-        }
+          `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music`,
         )
         this.sheetMusic = await response.json()
       } catch (error) {
