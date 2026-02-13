@@ -6,27 +6,15 @@
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="form-group">
           <label for="username" class="form-label">Username or Email</label>
-          <input
-            type="text"
-            id="username"
-            v-model="form.username"
-            :class="['form-input', { 'error': errors.username }]"
-            placeholder="Enter your username or email"
-            required
-          />
+          <input type="text" id="username" v-model="form.username" :class="['form-input', { 'error': errors.username }]"
+            placeholder="Enter your username or email" required />
           <span v-if="errors.username" class="error-message">{{ errors.username }}</span>
         </div>
 
         <div class="form-group">
           <label for="password" class="form-label">Password</label>
-          <input
-            type="password"
-            id="password"
-            v-model="form.password"
-            :class="['form-input', { 'error': errors.password }]"
-            placeholder="Enter your password"
-            required
-          />
+          <input type="password" id="password" v-model="form.password"
+            :class="['form-input', { 'error': errors.password }]" placeholder="Enter your password" required />
           <span v-if="errors.password" class="error-message">{{ errors.password }}</span>
         </div>
 
@@ -109,7 +97,7 @@ export default {
       this.message = ''
 
       try {
-        const response = await fetch('http://localhost:3000/api/login', {
+        const response = await fetch(`http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -149,11 +137,9 @@ export default {
 
 <style scoped>
 .login-container {
-  min-height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: start;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
 }
 

@@ -30,7 +30,6 @@ export default {
   methods: {
     logout() {
       logout();
-      window.location.href = '/login'
     }
   }
 }

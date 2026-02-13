@@ -6,66 +6,38 @@
       <form @submit.prevent="handleRegister" class="register-form">
         <div class="form-group">
           <label for="username" class="form-label">Username</label>
-          <input
-            type="text"
-            id="username"
-            v-model="form.username"
-            :class="['form-input', { 'error': errors.username }]"
-            placeholder="Choose a username"
-            required
-          />
+          <input type="text" id="username" v-model="form.username" :class="['form-input', { 'error': errors.username }]"
+            placeholder="Choose a username" required />
           <span v-if="errors.username" class="error-message">{{ errors.username }}</span>
         </div>
 
         <div class="form-group">
           <label for="email" class="form-label">Email</label>
-          <input
-            type="email"
-            id="email"
-            v-model="form.email"
-            :class="['form-input', { 'error': errors.email }]"
-            placeholder="Enter your email"
-            required
-          />
+          <input type="email" id="email" v-model="form.email" :class="['form-input', { 'error': errors.email }]"
+            placeholder="Enter your email" required />
           <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
         </div>
 
         <div class="form-group">
           <label for="full_name" class="form-label">Full Name (Optional)</label>
-          <input
-            type="text"
-            id="full_name"
-            v-model="form.full_name"
-            :class="['form-input', { 'error': errors.full_name }]"
-            placeholder="Enter your full name"
-          />
+          <input type="text" id="full_name" v-model="form.full_name"
+            :class="['form-input', { 'error': errors.full_name }]" placeholder="Enter your full name" />
           <span v-if="errors.full_name" class="error-message">{{ errors.full_name }}</span>
         </div>
 
         <div class="form-group">
           <label for="password" class="form-label">Password</label>
-          <input
-            type="password"
-            id="password"
-            v-model="form.password"
-            :class="['form-input', { 'error': errors.password }]"
-            placeholder="Create a password"
-            required
-          />
+          <input type="password" id="password" v-model="form.password"
+            :class="['form-input', { 'error': errors.password }]" placeholder="Create a password" required />
           <span v-if="errors.password" class="error-message">{{ errors.password }}</span>
           <small class="password-hint">Password must be at least 6 characters</small>
         </div>
 
         <div class="form-group">
           <label for="confirm_password" class="form-label">Confirm Password</label>
-          <input
-            type="password"
-            id="confirm_password"
-            v-model="form.confirm_password"
-            :class="['form-input', { 'error': errors.confirm_password }]"
-            placeholder="Confirm your password"
-            required
-          />
+          <input type="password" id="confirm_password" v-model="form.confirm_password"
+            :class="['form-input', { 'error': errors.confirm_password }]" placeholder="Confirm your password"
+            required />
           <span v-if="errors.confirm_password" class="error-message">{{ errors.confirm_password }}</span>
         </div>
 
@@ -178,7 +150,7 @@ export default {
       this.message = ''
 
       try {
-        const response = await fetch('http://localhost:3000/api/register', {
+        const response = await fetch(`http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/register`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

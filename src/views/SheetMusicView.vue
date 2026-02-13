@@ -33,6 +33,7 @@
           <tr>
             <th>Title</th>
             <th>Composer</th>
+            <th>Arranger</th>
             <th>Difficulty</th>
             <th>Actions</th>
           </tr>
@@ -41,10 +42,11 @@
           <tr v-for="item in sheetMusic" :key="item.id">
             <td>{{ item.title }}</td>
             <td>{{ item.composer }}</td>
+            <td>{{ item.arranger }}</td>
             <td>
               <span class="difficulty-badge" :class="(item.difficulty || '').toLowerCase()">{{
                 item.difficulty
-                }}</span>
+              }}</span>
             </td>
             <td class="actions-cell">
               <button @click="editSheetMusic(item)" class="btn-edit">{{ isAdmin ? 'Edit' : 'View' }}</button>
@@ -156,7 +158,7 @@
                 {{ isEditing ? 'Update' : 'Save' }}
               </button>
               <button type="button" @click="closeModal" class="btn-secondary">{{ isAdmin ? 'Cancel' : 'Close'
-              }}</button>
+                }}</button>
             </div>
           </form>
         </div>
@@ -247,10 +249,14 @@ export default {
           : `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music`
 
         const method = this.editingId ? 'PUT' : 'POST'
+        const token = localStorage.getItem('auth_token')
 
         const response = await fetch(url, {
           method,
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(this.form),
         })
 

@@ -452,8 +452,8 @@ app.post('/api/sheet-music', authenticateToken, (req, res) => {
     INSERT INTO sheet_music
     (title, composer, composer_dates, opus, arranger, instrumentation,
      \`key\`, tempo, difficulty, duration, publisher, year_published,
-     location, notes, user_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     location, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `
 
   const params = [
@@ -470,8 +470,7 @@ app.post('/api/sheet-music', authenticateToken, (req, res) => {
     publisher,
     year_published,
     location,
-    notes,
-    req.user.id
+    notes
   ]
 
   db.query(sql, params, (err, result) => {
