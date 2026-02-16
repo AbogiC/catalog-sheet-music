@@ -43,7 +43,7 @@ export default {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  font-family: 'Quantico', sans-serif !important;
   line-height: 1.6;
   color: #333;
   background-color: #f8f9fa;
@@ -57,7 +57,7 @@ body {
 }
 
 .nav-container {
-  max-width: 1200px;
+  width: 100vw;
   margin: 0 auto;
   padding: 0 20px;
 }
@@ -86,5 +86,12 @@ body {
 
 .btn-logout:hover {
   background-color: #c0392b;
+}
+
+@font-face {
+  font-family: 'Quantico';
+  src: url('../src/assets/Quantico/Quantico-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
 }
 </style>
