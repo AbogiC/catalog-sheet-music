@@ -1,41 +1,52 @@
 <template>
-  <div class="sheet-music-catalog">
-    <h1>Sheet Music Catalog</h1>
+  <div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0">Sheet Music Catalog</h2>
+      <button v-if="isAdmin" class="btn btn-primary" @click="openAddModal">
+        Add Sheet Music
+      </button>
+    </div>
 
-    <!-- Search and Filter -->
-    <div class="search-section">
-      <input v-model="searchQuery" @input="searchSheetMusic"
-        placeholder="Search by title, composer, or instrumentation..." class="search-input" />
-      <div class="filter-section">
-        <select v-model="filterDifficulty" @change="filterSheetMusic">
-          <option value="">All Difficulties</option>
-          <option value="Beginner">Beginner</option>
-          <option value="Intermediate">Intermediate</option>
-          <option value="Advanced">Advanced</option>
-          <option value="Professional">Professional</option>
-        </select>
+    <!-- Search & Filter -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="form-row">
+          <div class="col-md-8 mb-2">
+            <input v-model="searchQuery" @input="searchSheetMusic" class="form-control"
+              placeholder="Search by title, composer, or instrumentation" />
+          </div>
+          <div class="col-md-4 mb-2">
+            <select v-model="filterDifficulty" @change="filterSheetMusic" class="form-control">
+              <option value="">All Difficulties</option>
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+              <option value="Professional">Professional</option>
+            </select>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Add Button -->
-    <div v-if="isAdmin" class="add-button-section">
-      <button @click="openAddModal" class="btn-primary">Add New Sheet Music</button>
+    <!-- Table -->
+    <div v-if="loading" class="text-center py-5 text-muted">
+      Loading...
     </div>
 
-    <!-- Sheet Music List -->
-    <div class="music-list">
-      <div v-if="loading" class="loading">Loading...</div>
-      <div v-else-if="sheetMusic.length === 0" class="empty-state">
-        No sheet music found. Add some using the button above!
-      </div>
-      <table v-else class="music-table">
-        <thead>
+    <div v-else-if="sheetMusic.length === 0" class="alert alert-info">
+      No sheet music found.
+    </div>
+
+    <div v-else class="table-responsive">
+      <table class="table table-hover table-striped">
+        <thead class="thead-light">
           <tr>
             <th>Title</th>
             <th>Composer</th>
             <th>Arranger</th>
             <th>Difficulty</th>
-            <th>Actions</th>
+            <th class="text-nowrap">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -44,13 +55,17 @@
             <td>{{ item.composer }}</td>
             <td>{{ item.arranger }}</td>
             <td>
-              <span class="difficulty-badge" :class="(item.difficulty || '').toLowerCase()">{{
-                item.difficulty
-              }}</span>
+              <span class="badge" :class="difficultyClass(item.difficulty)">
+                {{ item.difficulty }}
+              </span>
             </td>
-            <td class="actions-cell">
-              <button @click="editSheetMusic(item)" class="btn-edit">{{ isAdmin ? 'Edit' : 'View' }}</button>
-              <button v-if="isAdmin" @click="deleteSheetMusic(item.id)" class="btn-delete">Delete</button>
+            <td class="text-nowrap">
+              <button class="btn btn-sm btn-outline-primary mr-2" @click="editSheetMusic(item)">
+                {{ isAdmin ? 'Edit' : 'View' }}
+              </button>
+              <button v-if="isAdmin" class="btn btn-sm btn-outline-danger" @click="deleteSheetMusic(item.id)">
+                Delete
+              </button>
             </td>
           </tr>
         </tbody>
@@ -58,107 +73,72 @@
     </div>
 
     <!-- Modal -->
-    <div v-if="showModal" class="modal-backdrop" @click="closeModal">
-      <div class="modal" @click.stop>
-        <div class="modal-header">
-          <h2 v-if="isAdmin">{{ isEditing ? 'Edit' : 'Add' }} Sheet Music</h2>
-          <h2 v-if="!isAdmin">Preview Sheet Music</h2>
-          <button @click="closeModal" class="close-btn">&times;</button>
-        </div>
-        <div class="modal-body">
-          <form @submit.prevent="saveSheetMusic" class="music-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label>Title *</label>
-                <input v-model="form.title" :disabled="!isAdmin" required />
-              </div>
-              <div class="form-group">
-                <label>Composer</label>
-                <input v-model="form.composer" :disabled="!isAdmin" />
-              </div>
+    <div v-if="showModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,.5)">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <form @submit.prevent="saveSheetMusic">
+            <div class="modal-header">
+              <h5 class="modal-title">
+                {{ isAdmin ? (isEditing ? 'Edit Sheet Music' : 'Add Sheet Music') : 'Sheet Music Preview' }}
+              </h5>
+              <button type="button" class="close" @click="closeModal">
+                <span>&times;</span>
+              </button>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label>Composer Dates</label>
-                <input v-model="form.composer_dates" :disabled="!isAdmin" placeholder="e.g., 1685-1750" />
+            <div class="modal-body">
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Title *</label>
+                  <input v-model="form.title" class="form-control" :disabled="!isAdmin" required />
+                </div>
+                <div class="form-group col-md-6">
+                  <label>Composer</label>
+                  <input v-model="form.composer" class="form-control" :disabled="!isAdmin" />
+                </div>
               </div>
-              <div class="form-group">
-                <label>Opus/Catalog Number</label>
-                <input v-model="form.opus" :disabled="!isAdmin" />
-              </div>
-            </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label>Arranger/Editor</label>
-                <input v-model="form.arranger" :disabled="!isAdmin" />
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Composer Dates</label>
+                  <input v-model="form.composer_dates" class="form-control" :disabled="!isAdmin" />
+                </div>
+                <div class="form-group col-md-6">
+                  <label>Opus</label>
+                  <input v-model="form.opus" class="form-control" :disabled="!isAdmin" />
+                </div>
               </div>
-              <div class="form-group">
-                <label>Instrumentation</label>
-                <input v-model="form.instrumentation" :disabled="!isAdmin" placeholder="e.g., Piano, Violin" />
-              </div>
-            </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label>Key</label>
-                <input v-model="form.key" :disabled="!isAdmin" placeholder="e.g., C major, A minor" />
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                  <label>Instrumentation</label>
+                  <input v-model="form.instrumentation" class="form-control" :disabled="!isAdmin" />
+                </div>
+                <div class="form-group col-md-6">
+                  <label>Difficulty</label>
+                  <select v-model="form.difficulty" class="form-control" :disabled="!isAdmin">
+                    <option value="">Select</option>
+                    <option>Beginner</option>
+                    <option>Intermediate</option>
+                    <option>Advanced</option>
+                    <option>Professional</option>
+                  </select>
+                </div>
               </div>
-              <div class="form-group">
-                <label>Tempo/Style</label>
-                <input v-model="form.tempo" :disabled="!isAdmin" placeholder="e.g., Allegro, Adagio" />
-              </div>
-            </div>
 
-            <div class="form-row">
               <div class="form-group">
-                <label>Difficulty</label>
-                <select v-model="form.difficulty" :disabled="!isAdmin">
-                  <option value="">Select Difficulty</option>
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Advanced">Advanced</option>
-                  <option value="Professional">Professional</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Duration (minutes)</label>
-                <input v-model="form.duration" :disabled="!isAdmin" type="number" step="0.1" />
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>Publisher</label>
-                <input v-model="form.publisher" :disabled="!isAdmin" />
-              </div>
-              <div class="form-group">
-                <label>Year Published</label>
-                <input v-model="form.year_published" :disabled="!isAdmin" type="number" />
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group full-width">
-                <label>Location/File Name</label>
-                <input v-model="form.location" :disabled="!isAdmin" placeholder="e.g., /music/bach_prelude.pdf" />
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group full-width">
                 <label>Notes</label>
-                <textarea v-model="form.notes" :disabled="!isAdmin" rows="3"></textarea>
+                <textarea v-model="form.notes" class="form-control" rows="3" :disabled="!isAdmin"></textarea>
               </div>
             </div>
 
-            <div class="form-actions">
-              <button v-if="isAdmin" type="submit" :disabled="!isAdmin" class="btn-primary">
+            <div class="modal-footer">
+              <button v-if="isAdmin" type="submit" class="btn btn-primary">
                 {{ isEditing ? 'Update' : 'Save' }}
               </button>
-              <button type="button" @click="closeModal" class="btn-secondary">{{ isAdmin ? 'Cancel' : 'Close'
-                }}</button>
+              <button type="button" class="btn btn-secondary" @click="closeModal">
+                Close
+              </button>
             </div>
           </form>
         </div>
@@ -169,6 +149,7 @@
 
 <script>
 import { isAdmin } from '../auth/auth.js'
+
 export default {
   data() {
     return {
@@ -203,436 +184,93 @@ export default {
     this.isAdmin = isAdmin()
   },
   methods: {
-    // Fetch all sheet music
+    difficultyClass(level) {
+      return {
+        Beginner: 'badge-success',
+        Intermediate: 'badge-primary',
+        Advanced: 'badge-warning',
+        Professional: 'badge-danger',
+      }[level] || 'badge-secondary'
+    },
+
     async fetchSheetMusic() {
       this.loading = true
       try {
-        const response = await fetch(
-          `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music`,
-        )
-        this.sheetMusic = await response.json()
-      } catch (error) {
-        console.error('Error fetching sheet music:', error)
+        const res = await fetch(`http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music`)
+        this.sheetMusic = await res.json()
       } finally {
         this.loading = false
       }
     },
 
-    // Search and filter
     async searchSheetMusic() {
+      const params = new URLSearchParams()
+      if (this.searchQuery) params.append('q', this.searchQuery)
+      if (this.filterDifficulty) params.append('difficulty', this.filterDifficulty)
+
       this.loading = true
       try {
-        const params = new URLSearchParams()
-        if (this.searchQuery) params.append('q', this.searchQuery)
-        if (this.filterDifficulty) params.append('difficulty', this.filterDifficulty)
-
-        const response = await fetch(
-          `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music?${params}`,
+        const res = await fetch(
+          `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music?${params}`
         )
-        this.sheetMusic = await response.json()
-      } catch (error) {
-        console.error('Error searching:', error)
+        this.sheetMusic = await res.json()
       } finally {
         this.loading = false
       }
     },
 
-    async filterSheetMusic() {
-      await this.searchSheetMusic()
+    filterSheetMusic() {
+      this.searchSheetMusic()
     },
 
-    // Save or update sheet music
-    async saveSheetMusic() {
-      try {
-        const url = this.editingId
-          ? `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music/${this.editingId}`
-          : `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music`
-
-        const method = this.editingId ? 'PUT' : 'POST'
-        const token = localStorage.getItem('auth_token')
-
-        const response = await fetch(url, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(this.form),
-        })
-
-        if (response.ok) {
-          this.closeModal()
-          await this.fetchSheetMusic()
-        }
-      } catch (error) {
-        console.error('Error saving sheet music:', error)
-      }
-    },
-
-    // Open add modal
     openAddModal() {
-      this.isEditing = false
-      this.showModal = true
       this.resetForm()
-    },
-
-    // Edit sheet music
-    editSheetMusic(item) {
-      this.editingId = item.id
-      this.isEditing = true
       this.showModal = true
-      Object.keys(this.form).forEach((key) => {
-        this.form[key] = item[key] || ''
-      })
     },
 
-    // Close modal
+    editSheetMusic(item) {
+      this.isEditing = true
+      this.editingId = item.id
+      this.showModal = true
+      Object.assign(this.form, item)
+    },
+
     closeModal() {
       this.showModal = false
       this.resetForm()
     },
 
-    // Delete sheet music
-    async deleteSheetMusic(id) {
-      if (!confirm('Are you sure you want to delete this item?')) return
+    async saveSheetMusic() {
+      const url = this.editingId
+        ? `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music/${this.editingId}`
+        : `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music`
 
-      try {
-        const response = await fetch(
-          `http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music/${id}`,
-          {
-            method: 'DELETE',
-          },
-        )
+      await fetch(url, {
+        method: this.editingId ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: JSON.stringify(this.form),
+      })
 
-        if (response.ok) {
-          await this.fetchSheetMusic()
-        }
-      } catch (error) {
-        console.error('Error deleting sheet music:', error)
-      }
+      this.closeModal()
+      this.fetchSheetMusic()
     },
 
-    // Reset form
-    resetForm() {
-      this.editingId = null
-      this.isEditing = false
-      Object.keys(this.form).forEach((key) => {
-        this.form[key] = ''
+    async deleteSheetMusic(id) {
+      if (!confirm('Delete this item?')) return
+      await fetch(`http://${process.env.VUE_APP_URL_DOMAIN}:3000/api/sheet-music/${id}`, {
+        method: 'DELETE',
       })
+      this.fetchSheetMusic()
+    },
+
+    resetForm() {
+      this.isEditing = false
+      this.editingId = null
+      Object.keys(this.form).forEach(k => (this.form[k] = ''))
     },
   },
 }
 </script>
-
-<style scoped>
-.sheet-music-catalog {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.search-section {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 30px;
-  align-items: center;
-}
-
-.search-input {
-  flex: 1;
-  padding: 10px 15px;
-  border: 2px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
-}
-
-.filter-section select {
-  padding: 10px 15px;
-  min-width: 200px;
-}
-
-.add-button-section {
-  margin-bottom: 20px;
-}
-
-.music-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.music-table th,
-.music-table td {
-  padding: 12px 15px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-}
-
-.music-table th {
-  background: #f5f5f5;
-  font-weight: 600;
-  color: #333;
-}
-
-.music-table tbody tr:hover {
-  background: #f9f9f9;
-}
-
-.actions-cell {
-  white-space: nowrap;
-}
-
-.btn-edit,
-.btn-delete {
-  padding: 5px 10px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  margin-right: 5px;
-}
-
-.btn-edit:hover {
-  color: #4caf50;
-}
-
-.btn-delete:hover {
-  color: #f44336;
-}
-
-.difficulty-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  color: white;
-}
-
-.difficulty-badge.beginner {
-  background-color: #4caf50;
-}
-
-.difficulty-badge.intermediate {
-  background-color: #2196f3;
-}
-
-.difficulty-badge.advanced {
-  background-color: #ff9800;
-}
-
-.difficulty-badge.professional {
-  background-color: #f44336;
-}
-
-.loading,
-.empty-state {
-  text-align: center;
-  padding: 40px;
-  color: #666;
-}
-
-.empty-state {
-  background: #f9f9f9;
-  border: 2px dashed #ddd;
-  border-radius: 8px;
-}
-
-/* Modal styles */
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-header h2 {
-  margin: 0;
-  color: #333;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #666;
-}
-
-.close-btn:hover {
-  color: #333;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.music-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.form-row {
-  display: flex;
-  gap: 20px;
-}
-
-.form-group {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group.full-width {
-  flex: 2;
-}
-
-label {
-  margin-bottom: 5px;
-  font-weight: 500;
-  color: #333;
-}
-
-input,
-select,
-textarea {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-textarea {
-  resize: vertical;
-}
-
-.form-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-button {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
-}
-
-.btn-primary {
-  background-color: #4caf50;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #45a049;
-}
-
-.btn-secondary {
-  background-color: #f0f0f0;
-  color: #333;
-}
-
-.btn-secondary:hover {
-  background-color: #e0e0e0;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .sheet-music-catalog {
-    padding: 10px;
-  }
-
-  .search-section {
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  .add-button-section {
-    text-align: center;
-  }
-
-  .music-table {
-    font-size: 14px;
-  }
-
-  .music-table th,
-  .music-table td {
-    padding: 8px 10px;
-  }
-
-  .actions-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .actions-cell button {
-    padding: 6px 12px;
-    font-size: 12px;
-  }
-
-  .modal {
-    width: 95%;
-    margin: 10px;
-  }
-
-  .modal-header,
-  .modal-body {
-    padding: 15px;
-  }
-
-  .form-row {
-    flex-direction: column;
-    gap: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .music-table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-
-  .music-table th,
-  .music-table td {
-    min-width: 120px;
-  }
-
-  .difficulty-badge {
-    font-size: 11px;
-    padding: 1px 6px;
-  }
-}
-</style>
